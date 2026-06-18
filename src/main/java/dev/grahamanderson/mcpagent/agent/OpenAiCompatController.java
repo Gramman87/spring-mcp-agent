@@ -64,6 +64,9 @@ public class OpenAiCompatController {
             emitter.send(SseEmitter.event().data("[DONE]"));
             emitter.complete();
         } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             emitter.completeWithError(e);
         }
     }
