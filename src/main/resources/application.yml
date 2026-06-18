@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: spring-mcp-agent
+
+server:
+  port: 8080
