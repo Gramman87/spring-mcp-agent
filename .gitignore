@@ -8,6 +8,9 @@ target/
 frontend/node_modules/
 frontend/dist/
 
+# Front-end build copied in at Docker build time (see Dockerfile)
+src/main/resources/static/
+
 # IDE / OS
 .idea/
 *.iml

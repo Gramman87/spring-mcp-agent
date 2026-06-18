@@ -57,6 +57,23 @@ npm run dev
 Open http://localhost:5173 and try: `What is 12 * 8?`, `Look up customer C-1001`,
 `What's the weather in Boulder?`
 
+## Deploy
+
+The app ships as a **single container** (multi-stage `Dockerfile`): the React
+front-end is built and bundled into the Spring Boot jar, so one service serves
+both the UI and the API **same-origin**. It binds the port given by `$PORT`.
+
+Deployed on **Render**'s free tier via the `render.yaml` blueprint — connect the
+repo on Render (New → Blueprint) and it builds the Dockerfile and deploys. Free
+instances spin down when idle, so the first request after a lull cold-starts in
+~50s.
+
+```bash
+# Build and run the production container locally:
+docker build -t spring-mcp-agent .
+docker run -p 8080:8080 spring-mcp-agent   # open http://localhost:8080
+```
+
 ## Test
 
 ```bash

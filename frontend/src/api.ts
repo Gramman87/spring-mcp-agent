@@ -1,7 +1,10 @@
 // SSE consumer for the Spring Boot streaming agent.
 // EventSource handles reconnection and event-type dispatch over GET /api/agent/chat.
 
-const API_BASE = "http://localhost:8080";
+// Same-origin: in production the Spring Boot app serves this bundle, so the API
+// is reached via relative paths. In dev, the Vite proxy (see vite.config.ts)
+// forwards /api and /v1 to the backend on :8080.
+const API_BASE = "";
 
 export interface ToolCall {
   tool: string;
