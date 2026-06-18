@@ -1,5 +1,7 @@
 # spring-mcp-agent
 
+**Live demo:** https://spring-mcp-agent.onrender.com — _free-tier instance; first load after idle cold-starts in ~50s._
+
 A small full-stack demo of an **agentic developer tool**: a Spring Boot (Java 21)
 backend that publishes tools over an **MCP-style producer surface** and runs a
 **streaming agent** that consumes them, with a **React + TypeScript** front-end that
@@ -66,7 +68,7 @@ both the UI and the API **same-origin**. It binds the port given by `$PORT`.
 Deployed on **Render**'s free tier via the `render.yaml` blueprint — connect the
 repo on Render (New → Blueprint) and it builds the Dockerfile and deploys. Free
 instances spin down when idle, so the first request after a lull cold-starts in
-~50s.
+~50s. Live at **https://spring-mcp-agent.onrender.com**.
 
 ```bash
 # Build and run the production container locally:
