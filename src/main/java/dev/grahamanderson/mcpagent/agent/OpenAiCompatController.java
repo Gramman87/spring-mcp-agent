@@ -1,7 +1,6 @@
 package dev.grahamanderson.mcpagent.agent;
 
 import dev.grahamanderson.mcpagent.tools.ToolResult;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -50,11 +50,13 @@ public class OpenAiCompatController {
                             "finish_reason", "stop"))));
         }
 
+        // Return the SseEmitter directly. Wrapping it in a ResponseEntity from an
+        // Object-typed method bypasses Spring's async emitter handler, which then
+        // fails with "No converter for SseEmitter". Returning it bare lets the
+        // emitter handler engage and set Content-Type: text/event-stream itself.
         SseEmitter emitter = new SseEmitter(60_000L);
         executor.execute(() -> streamChunks(emitter, id, answer));
-        return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_EVENT_STREAM)
-                .body(emitter);
+        return emitter;
     }
 
     private void streamChunks(SseEmitter emitter, String id, String answer) {
@@ -72,13 +74,16 @@ public class OpenAiCompatController {
     }
 
     private static SseEmitter.SseEventBuilder chunk(String id, Map<String, Object> delta, String finishReason) {
+        // HashMap so finish_reason can be JSON null on intermediate chunks, as the
+        // OpenAI streaming format specifies (Map.of forbids null values).
+        Map<String, Object> choice = new HashMap<>();
+        choice.put("index", 0);
+        choice.put("delta", delta);
+        choice.put("finish_reason", finishReason);
         return SseEmitter.event().data(Map.of(
                 "id", id,
                 "object", "chat.completion.chunk",
-                "choices", List.of(Map.of(
-                        "index", 0,
-                        "delta", delta,
-                        "finish_reason", finishReason == null ? "" : finishReason))));
+                "choices", List.of(choice)));
     }
 
     private String runAgent(String message) {
