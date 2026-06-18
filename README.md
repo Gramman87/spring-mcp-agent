@@ -63,8 +63,10 @@ Open http://localhost:5173 and try: `What is 12 * 8?`, `Look up customer C-1001`
 mvn test
 ```
 
-JUnit 5 coverage spans the tool implementations, the registry, the agent's
-planning/composition logic, and the MCP controller (MockMvc).
+19 JUnit 5 tests span the tool implementations, the registry, the agent's
+planning/composition logic, the MCP controller (including malformed-input
+handling), the SSE streaming agent, and the OpenAI-compatible endpoint — the
+controllers exercised with MockMvc, including their streaming paths.
 
 ## Swapping in a real model
 
