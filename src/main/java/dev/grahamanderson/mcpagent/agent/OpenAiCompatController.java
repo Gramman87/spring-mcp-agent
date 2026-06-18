@@ -23,8 +23,6 @@ import java.util.concurrent.Executors;
 @RestController
 public class OpenAiCompatController {
 
-    private static final long TOKEN_DELAY_MS = 30;
-
     private final AgentService agent;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -61,10 +59,7 @@ public class OpenAiCompatController {
 
     private void streamChunks(SseEmitter emitter, String id, String answer) {
         try {
-            for (String token : answer.split("(?<=\\s)")) {
-                emitter.send(chunk(id, Map.of("content", token), null));
-                Thread.sleep(TOKEN_DELAY_MS);
-            }
+            TokenStream.emit(answer, token -> emitter.send(chunk(id, Map.of("content", token), null)));
             emitter.send(chunk(id, Map.of(), "stop"));
             emitter.send(SseEmitter.event().data("[DONE]"));
             emitter.complete();
@@ -92,7 +87,6 @@ public class OpenAiCompatController {
         return agent.compose(message, plan, result);
     }
 
-    @SuppressWarnings("unchecked")
     private static String lastUserMessage(Map<String, Object> body) {
         Object messages = body.get("messages");
         if (messages instanceof List<?> list) {

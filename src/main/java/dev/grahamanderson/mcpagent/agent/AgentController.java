@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 public class AgentController {
 
     private static final long STREAM_TIMEOUT_MS = 60_000;
-    private static final long TOKEN_DELAY_MS = 30;
 
     private final AgentService agent;
     private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -61,10 +60,8 @@ public class AgentController {
             }
 
             String answer = agent.compose(message, plan, result);
-            for (String token : answer.split("(?<=\\s)")) {
-                emitter.send(SseEmitter.event().name("token").data(token));
-                Thread.sleep(TOKEN_DELAY_MS);
-            }
+            TokenStream.emit(answer, token ->
+                    emitter.send(SseEmitter.event().name("token").data(token)));
 
             emitter.send(SseEmitter.event().name("done").data(Map.of("usedTool", plan.usesTool())));
             emitter.complete();
