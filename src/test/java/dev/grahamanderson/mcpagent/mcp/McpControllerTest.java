@@ -43,4 +43,25 @@ class McpControllerTest {
                         .content("{}"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void returnsBadRequestForMalformedArguments() throws Exception {
+        // Non-numeric operand: a client error, not a 500.
+        mockMvc.perform(post("/api/mcp/tools/calculate/invoke")
+                        .contentType("application/json")
+                        .content("{\"a\":\"not-a-number\",\"b\":2,\"op\":\"add\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.ok").value(false))
+                .andExpect(jsonPath("$.error").value(org.hamcrest.Matchers.containsString("Invalid arguments")));
+    }
+
+    @Test
+    void treatsDivideByZeroAsHandledToolError() throws Exception {
+        // Valid arguments, tool-level failure: still a 200 with ok == false.
+        mockMvc.perform(post("/api/mcp/tools/calculate/invoke")
+                        .contentType("application/json")
+                        .content("{\"a\":1,\"b\":0,\"op\":\"divide\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ok").value(false));
+    }
 }

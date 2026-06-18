@@ -38,8 +38,16 @@ public class McpController {
         if (!registry.has(name)) {
             return ResponseEntity.notFound().build();
         }
-        ToolResult result = registry.invoke(name, args);
-        return ResponseEntity.ok(result);
+        try {
+            return ResponseEntity.ok(registry.invoke(name, args));
+        } catch (IllegalArgumentException e) {
+            // Malformed arguments (wrong type, missing required field) are a client
+            // error — return 400 rather than letting the exception become a 500. A
+            // tool-level failure on valid input (e.g. divide by zero) is different:
+            // it comes back as a 200 with ToolResult.ok == false.
+            return ResponseEntity.badRequest()
+                    .body(ToolResult.error("Invalid arguments for tool '" + name + "': " + e.getMessage()));
+        }
     }
 
     private static Map<String, Object> descriptor(Tool tool) {
