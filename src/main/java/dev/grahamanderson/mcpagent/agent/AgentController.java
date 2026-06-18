@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,9 +50,14 @@ public class AgentController {
                 emitter.send(SseEmitter.event().name("tool_call")
                         .data(Map.of("tool", plan.toolName(), "args", plan.args())));
                 result = agent.invoke(plan);
-                emitter.send(SseEmitter.event().name("tool_result")
-                        .data(Map.of("tool", plan.toolName(), "ok", result.ok(),
-                                "content", result.content(), "error", result.error())));
+                // Build with a null-tolerant map: on success error() is null, on
+                // failure content() is null — Map.of() would throw NPE on either.
+                Map<String, Object> resultPayload = new HashMap<>();
+                resultPayload.put("tool", plan.toolName());
+                resultPayload.put("ok", result.ok());
+                resultPayload.put("content", result.content());
+                resultPayload.put("error", result.error());
+                emitter.send(SseEmitter.event().name("tool_result").data(resultPayload));
             }
 
             String answer = agent.compose(message, plan, result);
@@ -63,7 +68,12 @@ public class AgentController {
 
             emitter.send(SseEmitter.event().name("done").data(Map.of("usedTool", plan.usesTool())));
             emitter.complete();
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
+            // Any failure (I/O, interruption, serialization) must complete the
+            // emitter — otherwise the SSE connection hangs until it times out.
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             emitter.completeWithError(e);
         }
     }
