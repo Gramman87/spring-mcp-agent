@@ -11,6 +11,8 @@ streaming, and an OpenAI-compatible endpoint. Runs with **no API key** — the p
 is deterministic — but the LLM seam is isolated in `AgentService` so a real Claude or
 OpenAI tool-use call drops straight in.
 
+![Spring MCP Agent — the React client streaming two tool calls (calculate, lookup_customer) and their grounded answers](docs/screenshot.png)
+
 ## Architecture
 
 ```
